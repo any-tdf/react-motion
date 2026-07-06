@@ -1,0 +1,93 @@
+name: Publish
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+        paths:
+            - package.json
+
+permissions:
+    id-token: write
+    contents: read
+
+concurrency:
+    group: publish-react-motion-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    check-version:
+        runs-on: ubuntu-latest
+        outputs:
+            changed: ${{ steps.version.outputs.changed }}
+            current: ${{ steps.version.outputs.current }}
+            previous: ${{ steps.version.outputs.previous }}
+            npm_tag: ${{ steps.version.outputs.npm_tag }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Check version change
+              id: version
+              shell: bash
+              run: |
+                  current_version=$(node -e "console.log(require('./package.json').version)")
+                  previous_version=""
+
+                  if [[ "${{ github.event_name }}" == "push" ]]; then
+                      previous_package=$(git show "${{ github.event.before }}:package.json" 2>/dev/null || true)
+
+                      if [[ -n "$previous_package" ]]; then
+                          previous_version=$(printf '%s' "$previous_package" | node -e "let input = ''; process.stdin.on('data', chunk => input += chunk); process.stdin.on('end', () => console.log(JSON.parse(input).version));")
+                      fi
+                  fi
+
+                  npm_tag="latest"
+                  if [[ "$current_version" == *"-alpha"* ]]; then
+                      npm_tag="alpha"
+                  fi
+
+                  echo "current=$current_version" >> "$GITHUB_OUTPUT"
+                  echo "previous=$previous_version" >> "$GITHUB_OUTPUT"
+                  echo "npm_tag=$npm_tag" >> "$GITHUB_OUTPUT"
+
+                  if [[ "${{ github.event_name }}" == "workflow_dispatch" || -z "$previous_version" || "$current_version" != "$previous_version" ]]; then
+                      echo "changed=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "changed=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+    publish:
+        needs: check-version
+        if: needs.check-version.outputs.changed == 'true'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '24'
+                  registry-url: https://registry.npmjs.org
+                  package-manager-cache: false
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+
+            - name: Install
+              run: bun install --frozen-lockfile
+
+            - name: Test
+              run: bun test
+
+            - name: Build
+              run: bun run build
+
+            - name: Publish
+              run: npm publish --provenance --access public --tag "${{ needs.check-version.outputs.npm_tag }}"

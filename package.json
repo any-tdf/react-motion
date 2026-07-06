@@ -1,0 +1,73 @@
+{
+	"name": "@any-tdf/react-motion",
+	"version": "0.0.0-alpha.0",
+	"description": "React motion utilities compatible with Svelte transition, animate, easing, and motion APIs.",
+	"type": "module",
+	"license": "MIT",
+	"sideEffects": false,
+	"files": ["dist", "README.md", "LICENSE"],
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"docs:dev": "vite --config site/vite.config.ts --host 0.0.0.0",
+		"docs:build": "vite build --config site/vite.config.ts",
+		"docs:preview": "vite preview --config site/vite.config.ts --host 0.0.0.0",
+		"test": "bun test"
+	},
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./easing": {
+			"types": "./dist/easing.d.ts",
+			"import": "./dist/easing.js",
+			"default": "./dist/easing.js"
+		},
+		"./transition": {
+			"types": "./dist/transition.d.ts",
+			"import": "./dist/transition.js",
+			"default": "./dist/transition.js"
+		},
+		"./animate": {
+			"types": "./dist/animate.d.ts",
+			"import": "./dist/animate.js",
+			"default": "./dist/animate.js"
+		},
+		"./motion": {
+			"types": "./dist/motion.d.ts",
+			"import": "./dist/motion.js",
+			"default": "./dist/motion.js"
+		},
+		"./react": {
+			"types": "./dist/react.d.ts",
+			"import": "./dist/react.js",
+			"default": "./dist/react.js"
+		}
+	},
+	"peerDependencies": {
+		"react": "^18.0.0 || ^19.0.0",
+		"react-dom": "^18.0.0 || ^19.0.0"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"react-dom": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/react": "^19.1.4",
+		"@types/react-dom": "^19.1.5",
+		"@vitejs/plugin-react": "^4.4.1",
+		"lucide-react": "^1.21.0",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"typescript": "^5.8.3",
+		"vite": "^6.3.5"
+	}
+}
